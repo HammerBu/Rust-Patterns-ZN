@@ -1,13 +1,11 @@
-# Concatenating strings with `format!`
+# 用`format!`连接字符串 
 
-## Description
+## 说明
 
-It is possible to build up strings using the `push` and `push_str` methods on a
-mutable `String`, or using its `+` operator. However, it is often more
-convenient to use `format!`, especially where there is a mix of literal and
-non-literal strings.
+我们可以用`push` 和 `push_str`来向可变的`String`添加内容， 或者直接用`+`。
+然而，使用`format!`通常会更加方便，特别是在字面literal和非字面non-literal字符串混合的情况。
 
-## Example
+## 示例
 
 ```rust
 fn say_hello(name: &str) -> String {
@@ -22,12 +20,11 @@ fn say_hello(name: &str) -> String {
 }
 ```
 
-## Advantages
+## 优点
 
-Using `format!` is usually the most succinct and readable way to combine strings.
+使用`format!`通常是组合字符串的最简洁和可读最好的方法。
 
-## Disadvantages
+## 缺点
 
-It is usually not the most efficient way to combine strings - a series of `push`
-operations on a mutable string is usually the most efficient (especially if the
-string has been pre-allocated to the expected size).
+它通常不是组合字符串的最高效的方法，对一个可变的字符串进行一系列的`push`操作一般是最高效的
+（特别是当这个字符串已经预先分配了足够的内存）。
