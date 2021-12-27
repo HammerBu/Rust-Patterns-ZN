@@ -181,27 +181,23 @@ borrow checker</p>
 <p>代码是给人看的，而不是给计算机看的。</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="use-borrowed-types-for-arguments"><a class="header" href="#use-borrowed-types-for-arguments">Use borrowed types for arguments</a></h1>
-<h2 id="description"><a class="header" href="#description">Description</a></h2>
-<p>Using a target of a deref coercion can increase the flexibility of your code
-when you are deciding which argument type to use for a function argument.
-In this way, the function will accept more input types.</p>
-<p>This is not limited to slice-able or fat pointer types.
-In fact, you should always prefer using the <strong>borrowed type</strong> over
+<h2 id="说明"><a class="header" href="#说明">说明</a></h2>
+<p>当你决定使用哪种参数类型作为函数的参数时，尽量不要用带强制转换类型的引用，可以增加代码的灵活性。
+通过这种方式，函数将接受更多的输入类型。</p>
+<p>这种用法，并不局限于切片和胖指针。
+事实上，你应该总是倾向于使用
+<strong>borrowed type</strong> 
+而不是
 <strong>borrowing the owned type</strong>.
-Such as <code>&amp;str</code> over <code>&amp;String</code>, <code>&amp;[T]</code> over <code>&amp;Vec&lt;T&gt;</code>, or <code>&amp;T</code> over <code>&amp;Box&lt;T&gt;</code>.</p>
-<p>Using borrowed types you can avoid layers of indirection for those instances
-where the owned type already provides a layer of indirection. For instance, a
-<code>String</code> has a layer of indirection, so a <code>&amp;String</code> will have two layers of
-indirection. We can avoid this by using <code>&amp;str</code> instead, and letting <code>&amp;String</code>
-coerce to a <code>&amp;str</code> whenever the function is invoked.</p>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
-<p>For this example, we will illustrate some differences for using <code>&amp;String</code> as a
-function argument versus using a <code>&amp;str</code>, but the ideas apply as well to using
-<code>&amp;Vec&lt;T&gt;</code> versus using a <code>&amp;[T]</code> or using a <code>&amp;Box&lt;T&gt;</code> versus a <code>&amp;T</code>.</p>
-<p>Consider an example where we wish to determine if a word contains three
-consecutive vowels. We don't need to own the string to determine this, so we
-will take a reference.</p>
-<p>The code might look something like this:</p>
+例如 <code>&amp;str</code> 而非 <code>&amp;String</code>, <code>&amp;[T]</code> 而非 <code>&amp;Vec&lt;T&gt;</code> 以及 <code>&amp;T</code> 而非 <code>&amp;Box&lt;T&gt;</code>.</p>
+<p>使用borrowed类型可以避免增加间接层，因为owned类型本来是对数据的封装，自带一个间接层。
+例如，一个 <code>String</code> 有一层间接层，<code>&amp;String</code>就成了两层间接层。
+我们可以用<code>&amp;str</code>进行替代，传入函数时<code>&amp;String</code>强制转换成<code>&amp;str</code>。</p>
+<h2 id="例子"><a class="header" href="#例子">例子</a></h2>
+<p>在这个例子中, 我们将使用<code>&amp;String</code>作为函数参数，与用 <code>&amp;str</code> 进行对比，其中的区别跟 <code>&amp;Vec&lt;T&gt;</code> 与<code>&amp;[T]</code> 或者 <code>&amp;Box&lt;T&gt;</code> 与 <code>&amp;T</code> 都是类似的。</p>
+<p>现在我们希望确定一个词是否包含三个连续的元音字母。
+我们不必获得字符串的所有权，所以我们用引用。</p>
+<p>代码如下:</p>
 <pre><pre class="playground"><code class="language-rust edition2018">fn three_vowels(word: &amp;String) -&gt; bool {
     let mut vowel_count = 0;
     for c in word.chars() {
@@ -224,33 +220,28 @@ fn main() {
     println!(&quot;{}: {}&quot;, ferris, three_vowels(&amp;ferris));
     println!(&quot;{}: {}&quot;, curious, three_vowels(&amp;curious));
 
-    // This works fine, but the following two lines would fail:
+    // 上面的成功运行，下面的会报错
     // println!(&quot;Ferris: {}&quot;, three_vowels(&quot;Ferris&quot;));
     // println!(&quot;Curious: {}&quot;, three_vowels(&quot;Curious&quot;));
 
 }
 </code></pre></pre>
-<p>This works fine because we are passing a <code>&amp;String</code> type as a parameter.
-If we comment in the last two lines this example fails because a <code>&amp;str</code> type
-will not coerce to a <code>&amp;String</code> type. We can fix this by simply modifying the
-type for our argument.</p>
-<p>For instance, if we change our function declaration to:</p>
+<p>成功运行是因为我们传入的参数是<code>&amp;String</code>类型。
+后面注释掉的两行出错语句，错误原因是传入的参数成了<code>&amp;str</code>，它并不能隐式自动转成<code>&amp;String</code>类型。
+改以下参数的类型就能解决这个问题。</p>
+<p>比如我们将函数的声明变为如下：</p>
 <pre><code class="language-rust  ignore">fn three_vowels(word: &amp;str) -&gt; bool {
 </code></pre>
-<p>then both versions will compile and print the same output.</p>
+<p>现在传入<code>&amp;String</code>或者<code>&amp;str</code>就都能正常运行了</p>
 <pre><code class="language-bash">Ferris: false
 Curious: true
 </code></pre>
-<p>But wait, that's not all! There is more to this story.
-It's likely that you may say to yourself: that doesn't matter, I will never be
-using a <code>&amp;'static str</code> as an input anyways (as we did when we used <code>&quot;Ferris&quot;</code>).
-Even ignoring this special example, you may still find that using <code>&amp;str</code> will
-give you more flexibility than using a <code>&amp;String</code>.</p>
-<p>Let's now take an example where someone gives us a sentence, and we want to
-determine if any of the words in the sentence contain three consecutive vowels.
-We probably should make use of the function we have already defined and simply
-feed in each word from the sentence.</p>
-<p>An example of this could look like this:</p>
+<p>等等，还没完！书接下回，看到这你可能会撇撇嘴，然后说：那又怎样，我永远用不到<code>&amp;'static str</code>
+（比如上面例子中的<code>&quot;Ferris&quot;</code>）。
+抛开上述静态字符串的情况，你仍然会发现使用<code>&amp;str'会比使用</code>&amp;String`更灵活。</p>
+<p>考虑这样一个例子，有人给了我们一个句子，我们要确定句子中的每一个词是否包含三个连续的元音字母。
+我们也许应该用刚刚写好的函数来对句子中的每个单词做判断。</p>
+<p>代码如下：</p>
 <pre><pre class="playground"><code class="language-rust edition2018">fn three_vowels(word: &amp;str) -&gt; bool {
     let mut vowel_count = 0;
     for c in word.chars() {
@@ -277,28 +268,25 @@ fn main() {
     }
 }
 </code></pre></pre>
-<p>Running this example using our function declared with an argument type <code>&amp;str</code>
-will yield</p>
+<p>用传入参数为<code>&amp;str</code>的版本可以正常运行，得到输出：</p>
 <pre><code class="language-bash">curious has three consecutive vowels!
 </code></pre>
-<p>However, this example will not run when our function is declared with an
-argument type <code>&amp;String</code>. This is because string slices are a <code>&amp;str</code> and not a
-<code>&amp;String</code> which would require an allocation to be converted to <code>&amp;String</code> which
-is not implicit, whereas converting from <code>String</code> to <code>&amp;str</code> is cheap and implicit.</p>
-<h2 id="see-also"><a class="header" href="#see-also">See also</a></h2>
+<p>然而，用<code>&amp;String</code>参数的版本就不行。这是因为字符串的切片是<code>&amp;str</code>而非<code>&amp;String</code>，
+转成<code>&amp;String</code>并不是隐式的，而<code>String</code> 到 <code>&amp;str</code>的转化却是高效并且隐式的。</p>
+<h2 id="参见"><a class="header" href="#参见">参见</a></h2>
 <ul>
 <li><a href="https://doc.rust-lang.org/reference/type-coercions.html">Rust Language Reference on Type Coercions</a></li>
-<li>For more discussion on how to handle <code>String</code> and <code>&amp;str</code> see
+<li>更多关于如何使用<code>String</code> 和 <code>&amp;str</code> 的讨论
 <a href="https://web.archive.org/web/20201112023149/https://hermanradtke.com/2015/05/03/string-vs-str-in-rust-functions.html">this blog series (2015)</a>
 by Herman J. Radtke III</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="concatenating-strings-with-format"><a class="header" href="#concatenating-strings-with-format">Concatenating strings with <code>format!</code></a></h1>
-<h2 id="description-1"><a class="header" href="#description-1">Description</a></h2>
+<h2 id="description"><a class="header" href="#description">Description</a></h2>
 <p>It is possible to build up strings using the <code>push</code> and <code>push_str</code> methods on a
 mutable <code>String</code>, or using its <code>+</code> operator. However, it is often more
 convenient to use <code>format!</code>, especially where there is a mix of literal and
 non-literal strings.</p>
-<h2 id="example-1"><a class="header" href="#example-1">Example</a></h2>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -321,7 +309,7 @@ non-literal strings.</p>
 operations on a mutable string is usually the most efficient (especially if the
 string has been pre-allocated to the expected size).</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="constructors"><a class="header" href="#constructors">Constructors</a></h1>
-<h2 id="description-2"><a class="header" href="#description-2">Description</a></h2>
+<h2 id="description-1"><a class="header" href="#description-1">Description</a></h2>
 <p>Rust does not have constructors as a language construct. Instead, the
 convention is to use an <a href="https://doc.rust-lang.org/stable/book/ch05-03-method-syntax.html#associated-functions">associated function</a> <code>new</code> to create an object:</p>
 <pre><pre class="playground"><code class="language-rust edition2018">
@@ -415,7 +403,7 @@ recommended to also provide an associated function <code>new</code> without argu
 <p><strong>Hint:</strong> The advantage of implementing or deriving <code>Default</code> is that your type
 can now be used where a <code>Default</code> implementation is required, most prominently,
 any of the <a href="https://doc.rust-lang.org/stable/std/?search=or_default"><code>*or_default</code> functions in the standard library</a>.</p>
-<h2 id="see-also-1"><a class="header" href="#see-also-1">See also</a></h2>
+<h2 id="see-also"><a class="header" href="#see-also">See also</a></h2>
 <ul>
 <li>
 <p>The <a href="idioms/default.html">default idiom</a> for a more in-depth description of the
@@ -427,7 +415,7 @@ objects where there are multiple configurations.</p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="the-default-trait"><a class="header" href="#the-default-trait">The <code>Default</code> Trait</a></h1>
-<h2 id="description-3"><a class="header" href="#description-3">Description</a></h2>
+<h2 id="description-2"><a class="header" href="#description-2">Description</a></h2>
 <p>Many types in Rust have a <a href="idioms/ctor.html">constructor</a>. However, this is <em>specific</em> to the
 type; Rust cannot abstract over &quot;everything that has a <code>new()</code> method&quot;. To
 allow this, the <a href="https://doc.rust-lang.org/stable/std/default/trait.Default.html"><code>Default</code></a> trait was conceived, which can be used with
@@ -440,7 +428,7 @@ types implement <code>Default</code>, the more useful it becomes.</p>
 <p>On the other hand, constructors can take multiple arguments, while the
 <code>default()</code> method does not. There can even be multiple constructors with
 different names, but there can only be one <code>Default</code> implementation per type.</p>
-<h2 id="example-2"><a class="header" href="#example-2">Example</a></h2>
+<h2 id="example-1"><a class="header" href="#example-1">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">use std::{path::PathBuf, time::Duration};
 
 // note that we can simply auto-derive Default here.
@@ -475,7 +463,7 @@ fn main() {
     assert_eq!(conf, conf1);
 }
 </code></pre></pre>
-<h2 id="see-also-2"><a class="header" href="#see-also-2">See also</a></h2>
+<h2 id="see-also-1"><a class="header" href="#see-also-1">See also</a></h2>
 <ul>
 <li>The <a href="idioms/ctor.html">constructor</a> idiom is another way to generate instances that may or may
 not be &quot;default&quot;</li>
@@ -484,10 +472,10 @@ not be &quot;default&quot;</li>
 <li><a href="https://crates.io/crates/derive-new/"><code>derive(new)</code></a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="collections-are-smart-pointers"><a class="header" href="#collections-are-smart-pointers">Collections are smart pointers</a></h1>
-<h2 id="description-4"><a class="header" href="#description-4">Description</a></h2>
+<h2 id="description-3"><a class="header" href="#description-3">Description</a></h2>
 <p>Use the <code>Deref</code> trait to treat collections like smart pointers, offering owning
 and borrowed views of data.</p>
-<h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
+<h2 id="example-2"><a class="header" href="#example-2">Example</a></h2>
 <pre><code class="language-rust ignore">use std::ops::Deref;
 
 struct Vec&lt;T&gt; {
@@ -538,15 +526,15 @@ implement <code>Deref&lt;Target=Bar&lt;T&gt;&gt;</code> where <code>Bar</code> i
 <code>&amp;Bar&lt;T&gt;</code> is a borrowed view of the data in <code>Foo&lt;T&gt;</code>.</p>
 <p>Commonly, ordered collections will implement <code>Index</code> for <code>Range</code>s to provide
 slicing syntax. The target will be the borrowed view.</p>
-<h2 id="see-also-3"><a class="header" href="#see-also-3">See also</a></h2>
+<h2 id="see-also-2"><a class="header" href="#see-also-2">See also</a></h2>
 <p><a href="idioms/../anti_patterns/deref.html">Deref polymorphism anti-pattern</a>.</p>
 <p><a href="https://doc.rust-lang.org/std/ops/trait.Deref.html">Documentation for <code>Deref</code> trait</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="finalisation-in-destructors"><a class="header" href="#finalisation-in-destructors">Finalisation in destructors</a></h1>
-<h2 id="description-5"><a class="header" href="#description-5">Description</a></h2>
+<h2 id="description-4"><a class="header" href="#description-4">Description</a></h2>
 <p>Rust does not provide the equivalent to <code>finally</code> blocks - code that will be
 executed no matter how a function is exited. Instead, an object's destructor can
 be used to run code that must be run before exit.</p>
-<h2 id="example-4"><a class="header" href="#example-4">Example</a></h2>
+<h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
 <pre><code class="language-rust ignore">fn bar() -&gt; Result&lt;(), ()&gt; {
     // These don't need to be defined inside the function.
     struct Foo;
@@ -609,15 +597,15 @@ aborts the thread immediately, without running further destructors. This means
 that destructors are not absolutely guaranteed to run. It also means that you
 must take extra care in your destructors not to panic, since it could leave
 resources in an unexpected state.</p>
-<h2 id="see-also-4"><a class="header" href="#see-also-4">See also</a></h2>
+<h2 id="see-also-3"><a class="header" href="#see-also-3">See also</a></h2>
 <p><a href="idioms/../patterns/behavioural/RAII.html">RAII guards</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="memtake_-replace_-to-keep-owned-values-in-changed-enums"><a class="header" href="#memtake_-replace_-to-keep-owned-values-in-changed-enums"><code>mem::{take(_), replace(_)}</code> to keep owned values in changed enums</a></h1>
-<h2 id="description-6"><a class="header" href="#description-6">Description</a></h2>
+<h2 id="description-5"><a class="header" href="#description-5">Description</a></h2>
 <p>Say we have a <code>&amp;mut MyEnum</code> which has (at least) two variants,
 <code>A { name: String, x: u8 }</code> and <code>B { name: String }</code>. Now we want to change
 <code>MyEnum::A</code> to a <code>B</code> if <code>x</code> is zero, while keeping <code>MyEnum::B</code> intact.</p>
 <p>We can do this without cloning the <code>name</code>.</p>
-<h2 id="example-5"><a class="header" href="#example-5">Example</a></h2>
+<h2 id="example-4"><a class="header" href="#example-4">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -704,16 +692,16 @@ later.</p>
 <p>However, in Rust, we have to do a little more work to do this. An owned value
 may only have one owner, so to take it out, we need to put something back in –
 like Indiana Jones, replacing the artifact with a bag of sand.</p>
-<h2 id="see-also-5"><a class="header" href="#see-also-5">See also</a></h2>
+<h2 id="see-also-4"><a class="header" href="#see-also-4">See also</a></h2>
 <p>This gets rid of the <a href="idioms/../anti_patterns/borrow_clone.html">Clone to satisfy the borrow checker</a>
 anti-pattern in a specific case.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="on-stack-dynamic-dispatch"><a class="header" href="#on-stack-dynamic-dispatch">On-Stack Dynamic Dispatch</a></h1>
-<h2 id="description-7"><a class="header" href="#description-7">Description</a></h2>
+<h2 id="description-6"><a class="header" href="#description-6">Description</a></h2>
 <p>We can dynamically dispatch over multiple values, however, to do so, we need
 to declare multiple variables to bind differently-typed objects. To extend the
 lifetime as necessary, we can use deferred conditional initialization, as seen
 below:</p>
-<h2 id="example-6"><a class="header" href="#example-6">Example</a></h2>
+<h2 id="example-5"><a class="header" href="#example-5">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">use std::io;
 use std::fs;
 
@@ -772,7 +760,7 @@ scope.</p>
 of type <code>Stdin</code>, <code>file</code> is of type <code>File</code> and <code>readable</code> is of type <code>&amp;mut dyn Read</code></li>
 <li>Each borrowed value outlives all the references borrowed from it</li>
 </ul>
-<h2 id="see-also-6"><a class="header" href="#see-also-6">See also</a></h2>
+<h2 id="see-also-5"><a class="header" href="#see-also-5">See also</a></h2>
 <ul>
 <li><a href="idioms/dtor-finally.html">Finalisation in destructors</a> and
 <a href="idioms/../patterns/behavioural/RAII.html">RAII guards</a> can benefit from tight control over
@@ -799,7 +787,7 @@ sentinel return values (such as <code>NULL</code> pointers)</p>
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="error-handling-in-ffi"><a class="header" href="#error-handling-in-ffi">Error Handling in FFI</a></h1>
-<h2 id="description-8"><a class="header" href="#description-8">Description</a></h2>
+<h2 id="description-7"><a class="header" href="#description-7">Description</a></h2>
 <p>In foreign languages like C, errors are represented by return codes.
 However, Rust's type system allows much more rich error information to be
 captured a propogated through a full type.</p>
@@ -922,7 +910,7 @@ while not compromising the Rust code's API at all.</p>
 <p>It's a lot of typing, and some types may not be able to be converted easily
 to C.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="accepting-strings"><a class="header" href="#accepting-strings">Accepting Strings</a></h1>
-<h2 id="description-9"><a class="header" href="#description-9">Description</a></h2>
+<h2 id="description-8"><a class="header" href="#description-8">Description</a></h2>
 <p>When accepting strings via FFI through pointers, there are two principles that
 should be followed:</p>
 <ol>
@@ -1049,7 +1037,7 @@ completely crash.</p>
 <h2 id="disadvantages-6"><a class="header" href="#disadvantages-6">Disadvantages</a></h2>
 <p>None?</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="passing-strings"><a class="header" href="#passing-strings">Passing Strings</a></h1>
-<h2 id="description-10"><a class="header" href="#description-10">Description</a></h2>
+<h2 id="description-9"><a class="header" href="#description-9">Description</a></h2>
 <p>When passing strings to FFI functions, there are four principles that should be
 followed:</p>
 <ol>
@@ -1139,7 +1127,7 @@ system's ability to return zeroed memory (which is quite fast).</p>
 <h2 id="disadvantages-7"><a class="header" href="#disadvantages-7">Disadvantages</a></h2>
 <p>None?</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="iterating-over-an-option"><a class="header" href="#iterating-over-an-option">Iterating over an <code>Option</code></a></h1>
-<h2 id="description-11"><a class="header" href="#description-11">Description</a></h2>
+<h2 id="description-10"><a class="header" href="#description-10">Description</a></h2>
 <p><code>Option</code> can be viewed as a container that contains either zero or one
 element. In particular, it implements the <code>IntoIterator</code> trait, and as such
 can be used with generic code that needs such a type.</p>
@@ -1179,7 +1167,7 @@ element instead.</p>
 <p>Also, since <code>Option</code> implements <code>IntoIterator</code>, it's possible to iterate over
 it using a <code>for</code> loop. This is equivalent to matching it with <code>if let Some(..)</code>,
 and in most cases you should prefer the latter.</p>
-<h2 id="see-also-7"><a class="header" href="#see-also-7">See also</a></h2>
+<h2 id="see-also-6"><a class="header" href="#see-also-6">See also</a></h2>
 <ul>
 <li>
 <p><a href="https://doc.rust-lang.org/std/iter/fn.once.html"><code>std::iter::once</code></a> is an
@@ -1200,13 +1188,13 @@ for converting an <code>Option</code> to a zero- or one-element slice.</p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pass-variables-to-closure"><a class="header" href="#pass-variables-to-closure">Pass variables to closure</a></h1>
-<h2 id="description-12"><a class="header" href="#description-12">Description</a></h2>
+<h2 id="description-11"><a class="header" href="#description-11">Description</a></h2>
 <p>By default, closures capture their environment by borrowing. Or you can use
 <code>move</code>-closure to move whole environment. However, often you want to move just
 some variables to closure, give it copy of some data, pass it by reference, or
 perform some other transformation.</p>
 <p>Use variable rebinding in separate scope for that.</p>
-<h2 id="example-7"><a class="header" href="#example-7">Example</a></h2>
+<h2 id="example-6"><a class="header" href="#example-6">Example</a></h2>
 <p>Use</p>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
@@ -1252,7 +1240,7 @@ moved.</p>
 <h2 id="disadvantages-8"><a class="header" href="#disadvantages-8">Disadvantages</a></h2>
 <p>Additional indentation of closure body.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="non_exhaustive-and-private-fields-for-extensibility"><a class="header" href="#non_exhaustive-and-private-fields-for-extensibility"><code>#[non_exhaustive]</code> and private fields for extensibility</a></h1>
-<h2 id="description-13"><a class="header" href="#description-13">Description</a></h2>
+<h2 id="description-12"><a class="header" href="#description-12">Description</a></h2>
 <p>A small set of scenarios exist where a library author may want to add public
 fields to a public struct or new variants to an enum without breaking backwards
 compatibility.</p>
@@ -1268,7 +1256,7 @@ used, see <a href="https://doc.rust-lang.org/reference/attributes/type_system.ht
 instantiated or matched against (see Alternative)</p>
 </li>
 </ul>
-<h2 id="example-8"><a class="header" href="#example-8">Example</a></h2>
+<h2 id="example-7"><a class="header" href="#example-7">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -1362,12 +1350,12 @@ If a client decides to <code>panic!()</code> in this scenario, it may have been 
 expose this error at compile time.
 In fact, <code>#[non_exhaustive]</code> forces clients to handle the &quot;Something else&quot; case;
 there is rarely a sensible action to take in this scenario.</p>
-<h2 id="see-also-8"><a class="header" href="#see-also-8">See also</a></h2>
+<h2 id="see-also-7"><a class="header" href="#see-also-7">See also</a></h2>
 <ul>
 <li><a href="https://github.com/rust-lang/rfcs/blob/master/text/2008-non-exhaustive.md">RFC introducing #[non_exhaustive] attribute for enums and structs</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="easy-doc-initialization"><a class="header" href="#easy-doc-initialization">Easy doc initialization</a></h1>
-<h2 id="description-14"><a class="header" href="#description-14">Description</a></h2>
+<h2 id="description-13"><a class="header" href="#description-13">Description</a></h2>
 <p>If a struct takes significant effort to initialize, when writing docs, it can be
 quicker to wrap your example with a helper function which takes the struct as an
 argument.</p>
@@ -1402,7 +1390,7 @@ impl Connection {
     }
 }
 </code></pre>
-<h2 id="example-9"><a class="header" href="#example-9">Example</a></h2>
+<h2 id="example-8"><a class="header" href="#example-8">Example</a></h2>
 <p>Instead of typing all of this boilerplate to create an <code>Connection</code> and
 <code>Request</code> it is easier to just create a wrapping helper function which takes
 them as arguments:</p>
@@ -1442,13 +1430,13 @@ instance which is annotated with <code>#[doc(hidden)]</code> (so that users won'
 Then this method can be called inside of rustdoc because it is part of the
 crate's public API.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="temporary-mutability"><a class="header" href="#temporary-mutability">Temporary mutability</a></h1>
-<h2 id="description-15"><a class="header" href="#description-15">Description</a></h2>
+<h2 id="description-14"><a class="header" href="#description-14">Description</a></h2>
 <p>Often it is necessary to prepare and process some data, but after that data are
 only inspected and never modified. The intention can be made explicit by redefining
 the mutable variable as immutable.</p>
 <p>It can be done either by processing data within nested block or by redefining
 variable.</p>
-<h2 id="example-10"><a class="header" href="#example-10">Example</a></h2>
+<h2 id="example-9"><a class="header" href="#example-9">Example</a></h2>
 <p>Say, vector must be sorted before usage.</p>
 <p>Using nested block:</p>
 <pre><code class="language-rust ignore">let data = {
@@ -1502,7 +1490,7 @@ in Rust because we can just use <a href="https://doc.rust-lang.org/book/traits.h
 By doing so, these patterns increase flexibility in carrying out communication.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="command"><a class="header" href="#command">Command</a></h1>
-<h2 id="description-16"><a class="header" href="#description-16">Description</a></h2>
+<h2 id="description-15"><a class="header" href="#description-15">Description</a></h2>
 <p>The basic idea of the Command pattern is to separate out actions into its own
 objects and pass them as parameters.</p>
 <h2 id="motivation-7"><a class="header" href="#motivation-7">Motivation</a></h2>
@@ -1513,7 +1501,7 @@ For example, when a user pushes a button, or on arrival of a data packet.
 In addition, these commands might be undoable. This may come in useful for
 operations of an editor. We might want to store logs of executed commands so that
 we could reapply the changes later if the system crashes.</p>
-<h2 id="example-11"><a class="header" href="#example-11">Example</a></h2>
+<h2 id="example-10"><a class="header" href="#example-10">Example</a></h2>
 <p>Define two database operations <code>create table</code> and <code>add field</code>. Each of these
 operations is a command which knows how to undo the command, e.g., <code>drop table</code>
 and <code>remove field</code>. When a user invokes a database migration operation then each
@@ -1696,7 +1684,7 @@ way as we used in case of function pointers.</p>
 <p>As performance, there is always a trade-off between performance and code
 simplicity and organisation. Static dispatch gives faster performance, while
 dynamic dispatch provides flexibility when we structure our application.</p>
-<h2 id="see-also-9"><a class="header" href="#see-also-9">See also</a></h2>
+<h2 id="see-also-8"><a class="header" href="#see-also-8">See also</a></h2>
 <ul>
 <li>
 <p><a href="https://en.wikipedia.org/wiki/Command_pattern">Command pattern</a></p>
@@ -1706,7 +1694,7 @@ dynamic dispatch provides flexibility when we structure our application.</p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="interpreter"><a class="header" href="#interpreter">Interpreter</a></h1>
-<h2 id="description-17"><a class="header" href="#description-17">Description</a></h2>
+<h2 id="description-16"><a class="header" href="#description-16">Description</a></h2>
 <p>If a problem occurs very often and requires long and repetitive steps to solve
 it, then the problem instances might be expressed in a simple language and an
 interpreter object could solve it by interpreting the sentences written in this
@@ -1829,7 +1817,7 @@ fn main() {
     assert_eq!(1f64, norm!(0.5, -0.5, 0.5, -0.5));
 }
 </code></pre></pre>
-<h2 id="see-also-10"><a class="header" href="#see-also-10">See also</a></h2>
+<h2 id="see-also-9"><a class="header" href="#see-also-9">See also</a></h2>
 <ul>
 <li><a href="https://en.wikipedia.org/wiki/Interpreter_pattern">Interpreter pattern</a></li>
 <li><a href="https://en.wikipedia.org/wiki/Context-free_grammar">Context free grammar</a></li>
@@ -1843,10 +1831,10 @@ not be enough?</p>
 due to security considerations (e.g. passwords).</p>
 <p>For such cases we could use the <code>Newtype</code> pattern to provide <strong>type safety</strong>
 and <strong>encapsulation</strong>.</p>
-<h2 id="description-18"><a class="header" href="#description-18">Description</a></h2>
+<h2 id="description-17"><a class="header" href="#description-17">Description</a></h2>
 <p>Use a tuple struct with a single field to make an opaque wrapper for a type.
 This creates a new type, rather than an alias to a type (<code>type</code> items).</p>
-<h2 id="example-12"><a class="header" href="#example-12">Example</a></h2>
+<h2 id="example-11"><a class="header" href="#example-11">Example</a></h2>
 <pre><code class="language-rust ignore">// Some type, not necessarily in the same module or even crate.
 struct Foo {
     //..
@@ -1916,7 +1904,7 @@ e.g.,</li>
 types. Users of our module shouldn't know that we implement <code>Foo</code> by using a <code>Bar</code>,
 but what we're really hiding here is the types <code>T1</code> and <code>T2</code>, and how they are used
 with <code>Bar</code>.</p>
-<h2 id="see-also-11"><a class="header" href="#see-also-11">See also</a></h2>
+<h2 id="see-also-10"><a class="header" href="#see-also-10">See also</a></h2>
 <ul>
 <li><a href="https://doc.rust-lang.org/book/ch19-04-advanced-types.html?highlight=newtype#using-the-newtype-pattern-for-type-safety-and-abstraction">Advanced Types in the book</a></li>
 <li><a href="https://wiki.haskell.org/Newtype">Newtypes in Haskell</a></li>
@@ -1926,13 +1914,13 @@ builtin traits on newtypes.</li>
 <li><a href="https://www.worthe-it.co.za/blog/2020-10-31-newtype-pattern-in-rust.html">The Newtype Pattern In Rust</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="raii-with-guards"><a class="header" href="#raii-with-guards">RAII with guards</a></h1>
-<h2 id="description-19"><a class="header" href="#description-19">Description</a></h2>
+<h2 id="description-18"><a class="header" href="#description-18">Description</a></h2>
 <p><a href="https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">RAII</a> stands for &quot;Resource Acquisition is Initialisation&quot; which is a
 terrible name. The essence of the pattern is that resource initialisation is done
 in the constructor of an object and finalisation in the destructor. This pattern
 is extended in Rust by using an RAII object as a guard of some resource and relying
 on the type system to ensure that access is always mediated by the guard object.</p>
-<h2 id="example-13"><a class="header" href="#example-13">Example</a></h2>
+<h2 id="example-12"><a class="header" href="#example-12">Example</a></h2>
 <p>Mutex guards are the classic example of this pattern from the std library (this
 is a simplified version of the real implementation):</p>
 <pre><code class="language-rust ignore">use std::ops::Deref;
@@ -2017,14 +2005,14 @@ is shorter than the lifetime of <code>self</code>.</p>
 <p>Note that implementing <code>Deref</code> is not a core part of this pattern, it only makes
 using the guard object more ergonomic. Implementing a <code>get</code> method on the guard
 works just as well.</p>
-<h2 id="see-also-12"><a class="header" href="#see-also-12">See also</a></h2>
+<h2 id="see-also-11"><a class="header" href="#see-also-11">See also</a></h2>
 <p><a href="patterns/behavioural/../../idioms/dtor-finally.html">Finalisation in destructors idiom</a></p>
 <p>RAII is a common pattern in C++: <a href="http://en.cppreference.com/w/cpp/language/raii">cppreference.com</a>,
 <a href="https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">wikipedia</a>.</p>
 <p><a href="https://doc.rust-lang.org/1.0.0/style/ownership/raii.html">Style guide entry</a>
 (currently just a placeholder).</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="strategy-aka-policy"><a class="header" href="#strategy-aka-policy">Strategy (aka Policy)</a></h1>
-<h2 id="description-20"><a class="header" href="#description-20">Description</a></h2>
+<h2 id="description-19"><a class="header" href="#description-19">Description</a></h2>
 <p>The <a href="https://en.wikipedia.org/wiki/Strategy_pattern">Strategy design pattern</a>
 is a technique that enables separation of concerns.
 It also allows to decouple software modules through <a href="https://en.wikipedia.org/wiki/Dependency_inversion_principle">Dependency Inversion</a>.</p>
@@ -2043,7 +2031,7 @@ in <code>JSON</code> or <code>Plain Text</code> formats.
 But things vary over time, and we don't know what kind of requirement we may get
 in the future. For example, we may need to generate our report in a completly new
 format, or just modify one of the existing formats.</p>
-<h2 id="example-14"><a class="header" href="#example-14">Example</a></h2>
+<h2 id="example-13"><a class="header" href="#example-13">Example</a></h2>
 <p>In this example our invariants (or abstractions) are <code>Context</code>, <code>Formatter</code>,
 and <code>Report</code>, while <code>Text</code> and <code>Json</code> are our strategy structs. These strategies
 have to implement the <code>Formatter</code> trait.</p>
@@ -2171,21 +2159,21 @@ fn main() {
     assert_eq!(82, val.map(first_byte_strategy).unwrap());
 }
 </code></pre></pre>
-<h2 id="see-also-13"><a class="header" href="#see-also-13">See also</a></h2>
+<h2 id="see-also-12"><a class="header" href="#see-also-12">See also</a></h2>
 <ul>
 <li><a href="https://en.wikipedia.org/wiki/Strategy_pattern">Strategy Pattern</a></li>
 <li><a href="https://en.wikipedia.org/wiki/Dependency_injection">Dependency Injection</a></li>
 <li><a href="https://en.wikipedia.org/wiki/Modern_C++_Design#Policy-based_design">Policy Based Design</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="visitor"><a class="header" href="#visitor">Visitor</a></h1>
-<h2 id="description-21"><a class="header" href="#description-21">Description</a></h2>
+<h2 id="description-20"><a class="header" href="#description-20">Description</a></h2>
 <p>A visitor encapsulates an algorithm that operates over a heterogeneous
 collection of objects. It allows multiple different algorithms to be written
 over the same data without having to modify the data (or their primary
 behaviour).</p>
 <p>Furthermore, the visitor pattern allows separating the traversal of
 a collection of objects from the operations performed on each object.</p>
-<h2 id="example-15"><a class="header" href="#example-15">Example</a></h2>
+<h2 id="example-14"><a class="header" href="#example-14">Example</a></h2>
 <pre><code class="language-rust ignore">// The data we will visit
 mod ast {
     pub enum Stmt {
@@ -2267,7 +2255,7 @@ example,</p>
 </code></pre>
 <p>In other languages (e.g., Java) it is common for data to have an <code>accept</code> method
 which performs the same duty.</p>
-<h2 id="see-also-14"><a class="header" href="#see-also-14">See also</a></h2>
+<h2 id="see-also-13"><a class="header" href="#see-also-13">See also</a></h2>
 <p>The visitor pattern is a common pattern in most OO languages.</p>
 <p><a href="https://en.wikipedia.org/wiki/Visitor_pattern">Wikipedia article</a></p>
 <p>The <a href="patterns/behavioural/../creational/fold.html">fold</a> pattern is similar to visitor but produces
@@ -2281,9 +2269,9 @@ result in design problems or in added complexity to the design. Creational desig
 patterns solve this problem by somehow controlling this object creation.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="builder"><a class="header" href="#builder">Builder</a></h1>
-<h2 id="description-22"><a class="header" href="#description-22">Description</a></h2>
+<h2 id="description-21"><a class="header" href="#description-21">Description</a></h2>
 <p>Construct an object with calls to a builder helper.</p>
-<h2 id="example-16"><a class="header" href="#example-16">Example</a></h2>
+<h2 id="example-15"><a class="header" href="#example-15">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -2371,7 +2359,7 @@ fb.b();
 let f = fb.build();
 </code></pre>
 <p>as well as the <code>FooBuilder::new().a().b().build()</code> style.</p>
-<h2 id="see-also-15"><a class="header" href="#see-also-15">See also</a></h2>
+<h2 id="see-also-14"><a class="header" href="#see-also-14">See also</a></h2>
 <ul>
 <li><a href="https://web.archive.org/web/20210104103100/https://doc.rust-lang.org/1.12.0/style/ownership/builders.html">Description in the style guide</a></li>
 <li><a href="https://crates.io/crates/derive_builder">derive_builder</a>, a crate for automatically
@@ -2381,13 +2369,13 @@ implementing this pattern while avoiding the boilerplate.</li>
 <li><a href="https://web.archive.org/web/20210104103000/https://rust-lang.github.io/api-guidelines/type-safety.html#c-builder">Construction of complex values</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="fold"><a class="header" href="#fold">Fold</a></h1>
-<h2 id="description-23"><a class="header" href="#description-23">Description</a></h2>
+<h2 id="description-22"><a class="header" href="#description-22">Description</a></h2>
 <p>Run an algorithm over each item in a collection of data to create a new item,
 thus creating a whole new collection.</p>
 <p>The etymology here is unclear to me. The terms 'fold' and 'folder' are used
 in the Rust compiler, although it appears to me to be more like a map than a
 fold in the usual sense. See the discussion below for more details.</p>
-<h2 id="example-17"><a class="header" href="#example-17">Example</a></h2>
+<h2 id="example-16"><a class="header" href="#example-16">Example</a></h2>
 <pre><code class="language-rust ignore">// The data we will fold, a simple AST.
 mod ast {
     pub enum Stmt {
@@ -2470,7 +2458,7 @@ expensive.</p>
 the original data structure, and we don't need to clone unchanged nodes. However,
 they are less ergonomic to use and mean that the data structures cannot be
 mutable.</p>
-<h2 id="see-also-16"><a class="header" href="#see-also-16">See also</a></h2>
+<h2 id="see-also-15"><a class="header" href="#see-also-15">See also</a></h2>
 <p>Iterators have a <code>fold</code> method, however this folds a data structure into a
 value, rather than into a new data structure. An iterator's <code>map</code> is more like
 this fold pattern.</p>
@@ -2489,7 +2477,7 @@ among entities.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="compose-structs-together-for-better-borrowing"><a class="header" href="#compose-structs-together-for-better-borrowing">Compose structs together for better borrowing</a></h1>
 <p>TODO - this is not a very snappy name</p>
-<h2 id="description-24"><a class="header" href="#description-24">Description</a></h2>
+<h2 id="description-23"><a class="header" href="#description-23">Description</a></h2>
 <p>Sometimes a large struct will cause issues with the borrow checker - although
 fields can be borrowed independently, sometimes the whole struct ends up being
 used at once, preventing other uses. A solution might be to decompose the struct
@@ -2498,7 +2486,7 @@ struct. Then each struct can be borrowed separately and have more flexible
 behaviour.</p>
 <p>This will often lead to a better design in other ways: applying this design
 pattern often reveals smaller units of functionality.</p>
-<h2 id="example-18"><a class="header" href="#example-18">Example</a></h2>
+<h2 id="example-17"><a class="header" href="#example-17">Example</a></h2>
 <p>Here is a contrived example of where the borrow checker foils us in our plan to
 use a struct:</p>
 <pre><pre class="playground"><code class="language-rust edition2018">
@@ -2573,7 +2561,7 @@ independently of each other. In the example, the borrow checker knows that <code
 and <code>a.c</code> are distinct and can be borrowed independently, it does not try to
 borrow all of <code>a</code>, which would make this pattern useless.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="prefer-small-crates"><a class="header" href="#prefer-small-crates">Prefer small crates</a></h1>
-<h2 id="description-25"><a class="header" href="#description-25">Description</a></h2>
+<h2 id="description-24"><a class="header" href="#description-24">Description</a></h2>
 <p>Prefer small crates that do one thing well.</p>
 <p>Cargo and crates.io make it easy to add third-party libraries, much more so than
 in say C or C++. Moreover, since packages on crates.io cannot be edited or removed
@@ -2608,12 +2596,12 @@ for converting <code>&amp;T</code> to <code>&amp;[T]</code>.</p>
 URLs.</p>
 <p>The <a href="https://crates.io/crates/num_cpus"><code>num_cpus</code></a> crate provides a function to
 query the number of CPUs on a machine.</p>
-<h2 id="see-also-17"><a class="header" href="#see-also-17">See also</a></h2>
+<h2 id="see-also-16"><a class="header" href="#see-also-16">See also</a></h2>
 <ul>
 <li><a href="https://crates.io/">crates.io: The Rust community crate host</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="contain-unsafety-in-small-modules"><a class="header" href="#contain-unsafety-in-small-modules">Contain unsafety in small modules</a></h1>
-<h2 id="description-26"><a class="header" href="#description-26">Description</a></h2>
+<h2 id="description-25"><a class="header" href="#description-25">Description</a></h2>
 <p>If you have <code>unsafe</code> code, create the smallest possible module that can uphold
 the needed invariants to build a minimal safe interface upon the unsafety. Embed
 this into a larger module that contains only safe code and presents an ergonomic
@@ -2640,7 +2628,7 @@ behavior.
 However, users have the option of using an <code>unsafe</code> method to create a <code>String</code>,
 in which case the onus is on them to guarantee the validity of the contents.</li>
 </ul>
-<h2 id="see-also-18"><a class="header" href="#see-also-18">See also</a></h2>
+<h2 id="see-also-17"><a class="header" href="#see-also-17">See also</a></h2>
 <ul>
 <li><a href="https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html">Ralf Jung's Blog about invariants in unsafe code</a></li>
 </ul>
@@ -2660,7 +2648,7 @@ together into an opaque &quot;object&quot;</p>
 </li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="object-based-apis"><a class="header" href="#object-based-apis">Object-Based APIs</a></h1>
-<h2 id="description-27"><a class="header" href="#description-27">Description</a></h2>
+<h2 id="description-26"><a class="header" href="#description-26">Description</a></h2>
 <p>When designing APIs in Rust which are exposed to other languages, there are some
 important design principles which are contrary to normal Rust API design:</p>
 <ol>
@@ -2880,7 +2868,7 @@ strings with minimal unsafe code, and is easier to get right than
 <p>However, not every API can be done this way.
 It is up to the best judgement of the programmer as to who their audience is.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="type-consolidation-into-wrappers"><a class="header" href="#type-consolidation-into-wrappers">Type Consolidation into Wrappers</a></h1>
-<h2 id="description-28"><a class="header" href="#description-28">Description</a></h2>
+<h2 id="description-27"><a class="header" href="#description-27">Description</a></h2>
 <p>This pattern is designed to allow gracefully handling multiple related types,
 while minimizing the surface area for memory unsafety.</p>
 <p>One of the cornerstones of Rust's aliasing rules is lifetimes.
@@ -3017,13 +3005,13 @@ knowing how <em>not</em> to solve it. Anti-patterns give us great counter-exampl
 consider relative to design patterns. Anti-patterns are not confined to code.
 For example, a process can be an anti-pattern, too.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="clone-to-satisfy-the-borrow-checker"><a class="header" href="#clone-to-satisfy-the-borrow-checker">Clone to satisfy the borrow checker</a></h1>
-<h2 id="description-29"><a class="header" href="#description-29">Description</a></h2>
+<h2 id="description-28"><a class="header" href="#description-28">Description</a></h2>
 <p>The borrow checker prevents Rust users from developing otherwise unsafe code by
 ensuring that either: only one mutable reference exists, or potentially many but
 all immutable references exist. If the code written does not hold true to these
 conditions, this anti-pattern arises when the developer resolves the compiler
 error by cloning the variable.</p>
-<h2 id="example-19"><a class="header" href="#example-19">Example</a></h2>
+<h2 id="example-18"><a class="header" href="#example-18">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -3074,7 +3062,7 @@ should be understood fully before assessing whether the clone is required or not
 cases in which <code>.clone()</code> is not necessary, like <a href="https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone">1</a>,
 <a href="https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy">2</a>,
 <a href="https://rust-lang.github.io/rust-clippy/master/index.html#map_clone">3</a> or <a href="https://rust-lang.github.io/rust-clippy/master/index.html#clone_double_ref">4</a>.</p>
-<h2 id="see-also-19"><a class="header" href="#see-also-19">See also</a></h2>
+<h2 id="see-also-18"><a class="header" href="#see-also-18">See also</a></h2>
 <ul>
 <li><a href="anti_patterns/../idioms/mem-replace.html"><code>mem::{take(_), replace(_)}</code> to keep owned values in changed enums</a></li>
 <li><a href="http://doc.rust-lang.org/std/rc/"><code>Rc&lt;T&gt;</code> documentation, which handles .clone() intelligently</a></li>
@@ -3082,10 +3070,10 @@ cases in which <code>.clone()</code> is not necessary, like <a href="https://rus
 <li><a href="https://web.archive.org/web/20210120233744/https://xion.io/post/code/rust-borrowchk-tricks.html">Tricks with ownership in Rust</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="denywarnings"><a class="header" href="#denywarnings"><code>#![deny(warnings)]</code></a></h1>
-<h2 id="description-30"><a class="header" href="#description-30">Description</a></h2>
+<h2 id="description-29"><a class="header" href="#description-29">Description</a></h2>
 <p>A well-intentioned crate author wants to ensure their code builds without
 warnings. So they annotate their crate root with the following:</p>
-<h2 id="example-20"><a class="header" href="#example-20">Example</a></h2>
+<h2 id="example-19"><a class="header" href="#example-19">Example</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span>#![deny(warnings)]
@@ -3153,7 +3141,7 @@ Here is a list of warning lints that is (hopefully) safe to deny (as of Rustc 1.
 <p>Some may also want to add <code>missing-copy-implementations</code> to their list.</p>
 <p>Note that we explicitly did not add the <code>deprecated</code> lint, as it is fairly
 certain that there will be more deprecated APIs in the future.</p>
-<h2 id="see-also-20"><a class="header" href="#see-also-20">See also</a></h2>
+<h2 id="see-also-19"><a class="header" href="#see-also-19">See also</a></h2>
 <ul>
 <li><a href="https://rust-lang.github.io/rust-clippy/master">A collection of all clippy lints</a></li>
 <li><a href="https://doc.rust-lang.org/reference/attributes.html#deprecation">deprecate attribute</a> documentation</li>
@@ -3162,10 +3150,10 @@ certain that there will be more deprecated APIs in the future.</p>
 <li><a href="https://github.com/Manishearth/rust-clippy">rust-clippy</a> is a collection of lints for better Rust code</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="deref-polymorphism"><a class="header" href="#deref-polymorphism"><code>Deref</code> polymorphism</a></h1>
-<h2 id="description-31"><a class="header" href="#description-31">Description</a></h2>
+<h2 id="description-30"><a class="header" href="#description-30">Description</a></h2>
 <p>Abuse the <code>Deref</code> trait to emulate inheritance between structs, and thus reuse
 methods.</p>
-<h2 id="example-21"><a class="header" href="#example-21">Example</a></h2>
+<h2 id="example-20"><a class="header" href="#example-20">Example</a></h2>
 <p>Sometimes we want to emulate the following common pattern from OO languages such
 as Java:</p>
 <pre><code class="language-java">class Foo {
@@ -3258,7 +3246,7 @@ favouring explicit conversions between types. Automatic dereferencing in the dot
 operator is a case where the ergonomics strongly favour an implicit mechanism,
 but the intention is that this is limited to degrees of indirection, not
 conversion between arbitrary types.</p>
-<h2 id="see-also-21"><a class="header" href="#see-also-21">See also</a></h2>
+<h2 id="see-also-20"><a class="header" href="#see-also-20">See also</a></h2>
 <ul>
 <li><a href="anti_patterns/../idioms/deref.html">Collections are smart pointers idiom</a>.</li>
 <li>Delegation crates for less boilerplate like <a href="https://crates.io/crates/delegate">delegate</a>
@@ -3340,7 +3328,7 @@ result. This process continues until we get to the last element in the range,
 <tr><td align="center">45</td><td align="center">10</td><td align="center">55</td></tr>
 </tbody></table>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="generics-as-type-classes"><a class="header" href="#generics-as-type-classes">Generics as Type Classes</a></h1>
-<h2 id="description-32"><a class="header" href="#description-32">Description</a></h2>
+<h2 id="description-31"><a class="header" href="#description-31">Description</a></h2>
 <p>Rust's type system is designed more like functional languages (like Haskell)
 rather than imperative languages (like Java and C++). As a result, Rust can turn
 many kinds of programming problems into &quot;static typing&quot; problems. This is one
@@ -3368,7 +3356,7 @@ where new members can be added to objects willy-nilly by any constructor.
 Unlike those languages, however, all of Rust's additional methods can be type
 checked when they are used, because their generics are statically defined. That
 makes them more usable while remaining safe.</p>
-<h2 id="example-22"><a class="header" href="#example-22">Example</a></h2>
+<h2 id="example-21"><a class="header" href="#example-21">Example</a></h2>
 <p>Suppose you are designing a storage server for a series of lab machines.
 Because of the software involved, there are two different protocols you need
 to support: BOOTP (for PXE network boot), and NFS (for remote mount storage).</p>
@@ -3544,7 +3532,7 @@ the <a href="functional/../patterns/behavioural/strategy.html">Strategy Pattern<
 instead.</p>
 </li>
 </ul>
-<h2 id="see-also-22"><a class="header" href="#see-also-22">See also</a></h2>
+<h2 id="see-also-21"><a class="header" href="#see-also-21">See also</a></h2>
 <p>This pattern is used throughout the standard library:</p>
 <ul>
 <li><code>Vec&lt;u8&gt;</code> can be cast from a String, unlike every other type of <code>Vec&lt;T&gt;</code>.<sup class="footnote-reference"><a href="#1">1</a></sup></li>
