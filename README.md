@@ -8,7 +8,7 @@
 你可以查看 [Umbrella issue](https://github.com/rust-unofficial/patterns/issues/116)
 以了解所有可能被添加的模式、反模式和习语。
 
-我们建议阅读我们的 [贡献指南 Contribution guide](./CONTRIBUTING.md) 获得更多关于如何作出贡献的信息。
+建议阅读我们的 [贡献指南 Contribution guide](./CONTRIBUTING.md) 以获得更多关于如何作出贡献的信息。
 
 ## 使用 mdbook 构建
 
