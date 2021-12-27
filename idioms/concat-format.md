@@ -9,13 +9,13 @@
 
 ```rust
 fn say_hello(name: &str) -> String {
-    // We could construct the result string manually.
+    // 我们可以分步用push创建字符串
     // let mut result = "Hello ".to_owned();
     // result.push_str(name);
     // result.push('!');
     // result
 
-    // But using format! is better.
+    // 显然用format!会更好
     format!("Hello {}!", name)
 }
 ```
