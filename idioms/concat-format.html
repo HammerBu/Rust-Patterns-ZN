@@ -146,13 +146,11 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="concatenating-strings-with-format"><a class="header" href="#concatenating-strings-with-format">Concatenating strings with <code>format!</code></a></h1>
-<h2 id="description"><a class="header" href="#description">Description</a></h2>
-<p>It is possible to build up strings using the <code>push</code> and <code>push_str</code> methods on a
-mutable <code>String</code>, or using its <code>+</code> operator. However, it is often more
-convenient to use <code>format!</code>, especially where there is a mix of literal and
-non-literal strings.</p>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
+                        <h1 id="用format连接字符串"><a class="header" href="#用format连接字符串">用<code>format!</code>连接字符串</a></h1>
+<h2 id="说明"><a class="header" href="#说明">说明</a></h2>
+<p>我们可以用<code>push</code> 和 <code>push_str</code>来向可变的<code>String</code>添加内容， 或者直接用<code>+</code>。
+然而，使用<code>format!</code>通常会更加方便，特别是在字面literal和非字面non-literal字符串混合的情况。</p>
+<h2 id="示例"><a class="header" href="#示例">示例</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -168,12 +166,11 @@ non-literal strings.</p>
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2 id="advantages"><a class="header" href="#advantages">Advantages</a></h2>
-<p>Using <code>format!</code> is usually the most succinct and readable way to combine strings.</p>
-<h2 id="disadvantages"><a class="header" href="#disadvantages">Disadvantages</a></h2>
-<p>It is usually not the most efficient way to combine strings - a series of <code>push</code>
-operations on a mutable string is usually the most efficient (especially if the
-string has been pre-allocated to the expected size).</p>
+<h2 id="优点"><a class="header" href="#优点">优点</a></h2>
+<p>使用<code>format!</code>通常是组合字符串的最简洁和可读最好的方法。</p>
+<h2 id="缺点"><a class="header" href="#缺点">缺点</a></h2>
+<p>它通常不是组合字符串的最高效的方法，对一个可变的字符串进行一系列的<code>push</code>操作一般是最高效的
+（特别是当这个字符串已经预先分配了足够的内存）。</p>
 
                     </main>
 
