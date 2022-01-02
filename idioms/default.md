@@ -1,52 +1,50 @@
-# The `Default` Trait
+# `Default` 特性
 
-## Description
+## 说明
 
-Many types in Rust have a [constructor]. However, this is *specific* to the
-type; Rust cannot abstract over "everything that has a `new()` method". To
-allow this, the [`Default`] trait was conceived, which can be used with
-containers and other generic types (e.g. see [`Option::unwrap_or_default()`]).
-Notably, some containers already implement it where applicable.
+Rust中的许多类型都有一个[构造器]。
+但这些构造器都是针对特定类型的，Rust没有抽象出一个对所有类型适用的`new()`方法。
+因此[`Default`] 特性trait应运而生，它适用于容器containers或者其他泛型类型generic types
+（例如[`Option::unwrap_or_default()`]）
+值得注意的是，一些容器containers已经实现了`Default`特性。
 
-Not only do one-element containers like `Cow`, `Box` or `Arc` implement
-`Default` for contained `Default` types, one can automatically
-`#[derive(Default)]` for structs whose fields all implement it, so the more
-types implement `Default`, the more useful it becomes.
+不仅单例容器如`Cow`, `Box` 和 `Arc` 实现了`Default`，
+使用`#[derive(Default)]`可以自动为所含字段实现了`Default`的结构体structs实现`Default`。
+所以越多的类型支持Default`，它就会越有用。
 
-On the other hand, constructors can take multiple arguments, while the
-`default()` method does not. There can even be multiple constructors with
-different names, but there can only be one `Default` implementation per type.
+然而，构造器可以用不同的参数去构建实例，但`default()`不行。
+我们可以定义多个不同的构造器去构造实例，但是`Default`的只能有一种实现。
 
-## Example
+## 例子
 
 ```rust
 use std::{path::PathBuf, time::Duration};
 
-// note that we can simply auto-derive Default here.
+// 这里我们可以很方便地自动实现 Default
 #[derive(Default, Debug, PartialEq)]
 struct MyConfiguration {
-    // Option defaults to None
+    // Option类型默认为 None
     output: Option<PathBuf>,
-    // Vecs default to empty vector
+    // Vecs类型默认为空 vector
     search_path: Vec<PathBuf>,
-    // Duration defaults to zero time
+    // Duration类型默认为0
     timeout: Duration,
-    // bool defaults to false
+    // bool类型默认为 false
     check: bool,
 }
 
 impl MyConfiguration {
-    // add setters here
+    // 这里添加 setters
 }
 
 fn main() {
-    // construct a new instance with default values
+    // 用默认值构建一个实例
     let mut conf = MyConfiguration::default();
-    // do something with conf here
+    // 改动一些键值
     conf.check = true;
     println!("conf = {:#?}", conf);
         
-    // partial initialization with default values, creates the same instance
+    // 用部分初始化partial initialization进行初始化
     let conf1 = MyConfiguration {
         check: true,
         ..Default::default()
@@ -55,15 +53,14 @@ fn main() {
 }
 ```
 
-## See also
+## 参见
 
-- The [constructor] idiom is another way to generate instances that may or may
-not be "default"
-- The [`Default`] documentation (scroll down for the list of implementors)
+- [构造器] 创建实例的方法，可以是默认的"default"，也可以不是
+- [`Default`] 文档 (下拉查看各实现implementors)
 - [`Option::unwrap_or_default()`]
 - [`derive(new)`]
 
-[constructor]: ctor.md
+[构造器]: ctor.md
 [`Default`]: https://doc.rust-lang.org/stable/std/default/trait.Default.html
 [`Option::unwrap_or_default()`]: https://doc.rust-lang.org/stable/std/option/enum.Option.html#method.unwrap_or_default
 [`derive(new)`]: https://crates.io/crates/derive-new/
