@@ -146,48 +146,46 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="the-default-trait"><a class="header" href="#the-default-trait">The <code>Default</code> Trait</a></h1>
-<h2 id="description"><a class="header" href="#description">Description</a></h2>
-<p>Many types in Rust have a <a href="ctor.html">constructor</a>. However, this is <em>specific</em> to the
-type; Rust cannot abstract over &quot;everything that has a <code>new()</code> method&quot;. To
-allow this, the <a href="https://doc.rust-lang.org/stable/std/default/trait.Default.html"><code>Default</code></a> trait was conceived, which can be used with
-containers and other generic types (e.g. see <a href="https://doc.rust-lang.org/stable/std/option/enum.Option.html#method.unwrap_or_default"><code>Option::unwrap_or_default()</code></a>).
-Notably, some containers already implement it where applicable.</p>
-<p>Not only do one-element containers like <code>Cow</code>, <code>Box</code> or <code>Arc</code> implement
-<code>Default</code> for contained <code>Default</code> types, one can automatically
-<code>#[derive(Default)]</code> for structs whose fields all implement it, so the more
-types implement <code>Default</code>, the more useful it becomes.</p>
-<p>On the other hand, constructors can take multiple arguments, while the
-<code>default()</code> method does not. There can even be multiple constructors with
-different names, but there can only be one <code>Default</code> implementation per type.</p>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
+                        <h1 id="default-特性"><a class="header" href="#default-特性"><code>Default</code> 特性</a></h1>
+<h2 id="说明"><a class="header" href="#说明">说明</a></h2>
+<p>Rust中的许多类型都有一个<a href="ctor.html">构造器</a>。
+但这些构造器都是针对特定类型的，Rust没有抽象出一个对所有类型适用的<code>new()</code>方法。
+因此<a href="https://doc.rust-lang.org/stable/std/default/trait.Default.html"><code>Default</code></a> 特性trait应运而生，它适用于容器containers或者其他泛型类型generic types
+（例如<a href="https://doc.rust-lang.org/stable/std/option/enum.Option.html#method.unwrap_or_default"><code>Option::unwrap_or_default()</code></a>）
+值得注意的是，一些容器containers已经实现了<code>Default</code>特性。</p>
+<p>不仅单例容器如<code>Cow</code>, <code>Box</code> 和 <code>Arc</code> 实现了<code>Default</code>，
+使用<code>#[derive(Default)]</code>可以自动为所含字段实现了<code>Default</code>的结构体structs实现<code>Default</code>。
+所以越多的类型支持Default`，它就会越有用。</p>
+<p>然而，构造器可以用不同的参数去构建实例，但<code>default()</code>不行。
+我们可以定义多个不同的构造器去构造实例，但是<code>Default</code>的只能有一种实现。</p>
+<h2 id="例子"><a class="header" href="#例子">例子</a></h2>
 <pre><pre class="playground"><code class="language-rust edition2018">use std::{path::PathBuf, time::Duration};
 
-// note that we can simply auto-derive Default here.
+// 这里我们可以很方便地自动实现 Default
 #[derive(Default, Debug, PartialEq)]
 struct MyConfiguration {
-    // Option defaults to None
+    // Option类型默认为 None
     output: Option&lt;PathBuf&gt;,
-    // Vecs default to empty vector
+    // Vecs类型默认为空 vector
     search_path: Vec&lt;PathBuf&gt;,
-    // Duration defaults to zero time
+    // Duration类型默认为0
     timeout: Duration,
-    // bool defaults to false
+    // bool类型默认为 false
     check: bool,
 }
 
 impl MyConfiguration {
-    // add setters here
+    // 这里添加 setters
 }
 
 fn main() {
-    // construct a new instance with default values
+    // 用默认值构建一个实例
     let mut conf = MyConfiguration::default();
-    // do something with conf here
+    // 改动一些键值
     conf.check = true;
     println!(&quot;conf = {:#?}&quot;, conf);
         
-    // partial initialization with default values, creates the same instance
+    // 用部分初始化partial initialization进行初始化
     let conf1 = MyConfiguration {
         check: true,
         ..Default::default()
@@ -195,11 +193,10 @@ fn main() {
     assert_eq!(conf, conf1);
 }
 </code></pre></pre>
-<h2 id="see-also"><a class="header" href="#see-also">See also</a></h2>
+<h2 id="参见"><a class="header" href="#参见">参见</a></h2>
 <ul>
-<li>The <a href="ctor.html">constructor</a> idiom is another way to generate instances that may or may
-not be &quot;default&quot;</li>
-<li>The <a href="https://doc.rust-lang.org/stable/std/default/trait.Default.html"><code>Default</code></a> documentation (scroll down for the list of implementors)</li>
+<li><a href="ctor.html">构造器</a> 创建实例的方法，可以是默认的&quot;default&quot;，也可以不是</li>
+<li><a href="https://doc.rust-lang.org/stable/std/default/trait.Default.html"><code>Default</code></a> 文档 (下拉查看各实现implementors)</li>
 <li><a href="https://doc.rust-lang.org/stable/std/option/enum.Option.html#method.unwrap_or_default"><code>Option::unwrap_or_default()</code></a></li>
 <li><a href="https://crates.io/crates/derive-new/"><code>derive(new)</code></a></li>
 </ul>
