@@ -2,7 +2,7 @@
 
 ## 说明
 
-Rust是没有构造器的，通常用[关联函数associated function][]的`new`方法创建一个对象：
+Rust语言没有直接提供构造器，通常用[关联函数associated function][]的`new`方法创建一个对象：
 
 ```rust
 /// Time in seconds.
