@@ -1,6 +1,6 @@
 # Rust设计模式 中文版
 
-一本关于Rust的设计模式和习语的开源书， [阅读地址](https://rust-unofficial.github.io/patterns/).
+一本关于Rust的设计模式和习语的开源书， [阅读地址](https://hammerbu.github.io/Rust-Patterns-ZN/).
 
 ## 贡献
 当你发现在这个库中缺少了一些对他人有帮助的内容，并渴望去阐述它们？棒极了! 我们总是乐于接受新的贡献(例如，对某些主题的阐述或纠正)。
