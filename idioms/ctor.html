@@ -146,10 +146,9 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="constructors"><a class="header" href="#constructors">Constructors</a></h1>
-<h2 id="description"><a class="header" href="#description">Description</a></h2>
-<p>Rust does not have constructors as a language construct. Instead, the
-convention is to use an <a href="https://doc.rust-lang.org/stable/book/ch05-03-method-syntax.html#associated-functions">associated function</a> <code>new</code> to create an object:</p>
+                        <h1 id="构造器"><a class="header" href="#构造器">构造器</a></h1>
+<h2 id="说明"><a class="header" href="#说明">说明</a></h2>
+<p>Rust是没有构造器的，通常用<a href="https://doc.rust-lang.org/stable/book/ch05-03-method-syntax.html#associated-functions">关联函数associated function</a>的<code>new</code>方法创建一个对象：</p>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -166,21 +165,21 @@ pub struct Second {
 }
 
 impl Second {
-    // Constructs a new instance of [`Second`].
-    // Note this is an associated function - no self.
+    // 创建一个秒实例 Constructs a new instance of [`Second`].
+    // 注意这是一个关联函数 - 没有self
     pub fn new(value: u64) -&gt; Self {
         Self { value }
     }
 
-    /// Returns the value in seconds.
+    /// 返回以秒为单位的数值
     pub fn value(&amp;self) -&gt; u64 {
         self.value
     }
 }
 <span class="boring">}
 </span></code></pre></pre>
-<h2 id="default-constructors"><a class="header" href="#default-constructors">Default Constructors</a></h2>
-<p>Rust supports default constructors with the <a href="https://doc.rust-lang.org/stable/std/default/trait.Default.html"><code>Default</code></a> trait:</p>
+<h2 id="default"><a class="header" href="#default">Default</a></h2>
+<p>Rust提供了<a href="https://doc.rust-lang.org/stable/std/default/trait.Default.html"><code>Default</code></a>trait来实现默认构造函数：</p>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -197,7 +196,7 @@ pub struct Second {
 }
 
 impl Second {
-    /// Returns the value in seconds.
+    /// 返回以秒为单位的数值
     pub fn value(&amp;self) -&gt; u64 {
         self.value
     }
@@ -210,8 +209,7 @@ impl Default for Second {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><code>Default</code> can also be derived if all types of all fields implement <code>Default</code>,
-like they do with <code>Second</code>:</p>
+<p>如果每个字段都都实现了<code>Default</code>，即可派生得到整个实例的<code>Default</code>：</p>
 <pre><pre class="playground"><code class="language-rust edition2018">
 <span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -236,20 +234,18 @@ impl Second {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p><strong>Note:</strong> When implementing <code>Default</code> for a type, it is neither required nor
-recommended to also provide an associated function <code>new</code> without arguments.</p>
-<p><strong>Hint:</strong> The advantage of implementing or deriving <code>Default</code> is that your type
-can now be used where a <code>Default</code> implementation is required, most prominently,
-any of the <a href="https://doc.rust-lang.org/stable/std/?search=or_default"><code>*or_default</code> functions in the standard library</a>.</p>
-<h2 id="see-also"><a class="header" href="#see-also">See also</a></h2>
+<p><strong>注意：</strong> 
+当为一个类型实现<code>Default</code>时，既不需要也不建议同时提供一个没有参数的关联函数<code>new</code>。</p>
+<p><strong>提示：</strong> 
+实现或派生<code>Default</code>后，你的类型可以用于需要<code>Default</code> 实现的地方，
+尤其是对 <a href="https://doc.rust-lang.org/stable/std/?search=or_default">标准库中<code>*or_default</code>函数</a>的支持。</p>
+<h2 id="参见"><a class="header" href="#参见">参见</a></h2>
 <ul>
 <li>
-<p>The <a href="default.html">default idiom</a> for a more in-depth description of the
-<code>Default</code> trait.</p>
+<p><a href="default.html">Default 特性</a> 中对<code>Default</code> trait有更详尽的描述。</p>
 </li>
 <li>
-<p>The <a href="../patterns/creational/builder.html">builder pattern</a> for constructing
-objects where there are multiple configurations.</p>
+<p><a href="../patterns/creational/builder.html">创建者模式</a> 讨论了创建多配置multiple configurations对象。</p>
 </li>
 </ul>
 
