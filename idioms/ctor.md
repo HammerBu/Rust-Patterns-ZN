@@ -1,9 +1,8 @@
-# Constructors
+# 构造器
 
-## Description
+## 说明
 
-Rust does not have constructors as a language construct. Instead, the
-convention is to use an [associated function][] `new` to create an object:
+Rust是没有构造器的，通常用[关联函数associated function][]的`new`方法创建一个对象：
 
 ```rust
 /// Time in seconds.
@@ -19,22 +18,22 @@ pub struct Second {
 }
 
 impl Second {
-    // Constructs a new instance of [`Second`].
-    // Note this is an associated function - no self.
+    // 创建一个秒实例 Constructs a new instance of [`Second`].
+    // 注意这是一个关联函数 - 没有self
     pub fn new(value: u64) -> Self {
         Self { value }
     }
 
-    /// Returns the value in seconds.
+    /// 返回以秒为单位的数值
     pub fn value(&self) -> u64 {
         self.value
     }
 }
 ```
 
-## Default Constructors
+## Default
 
-Rust supports default constructors with the [`Default`][std-default] trait:
+Rust提供了[`Default`][std-default]trait来实现默认构造函数：
 
 ```rust
 /// Time in seconds.
@@ -50,7 +49,7 @@ pub struct Second {
 }
 
 impl Second {
-    /// Returns the value in seconds.
+    /// 返回以秒为单位的数值
     pub fn value(&self) -> u64 {
         self.value
     }
@@ -63,8 +62,7 @@ impl Default for Second {
 }
 ```
 
-`Default` can also be derived if all types of all fields implement `Default`,
-like they do with `Second`:
+如果每个字段都都实现了`Default`，即可派生得到整个实例的`Default`：
 
 ```rust
 /// Time in seconds.
@@ -88,21 +86,19 @@ impl Second {
 }
 ```
 
-**Note:** When implementing `Default` for a type, it is neither required nor
-recommended to also provide an associated function `new` without arguments.
+**注意：** 
+当为一个类型实现`Default`时，既不需要也不建议同时提供一个没有参数的关联函数`new`。
 
-**Hint:** The advantage of implementing or deriving `Default` is that your type
-can now be used where a `Default` implementation is required, most prominently,
-any of the [`*or_default` functions in the standard library][std-or-default].
+**提示：** 
+实现或派生`Default`后，你的类型可以用于需要`Default` 实现的地方，
+尤其是对 [标准库中`*or_default`函数][std-or-default]的支持。
 
-## See also
+## 参见
 
-- The [default idiom](default.md) for a more in-depth description of the
-  `Default` trait.
+- [Default 特性](default.md) 中对`Default` trait有更详尽的描述。
 
-- The [builder pattern](../patterns/creational/builder.md) for constructing
-  objects where there are multiple configurations.
+- [创建者模式](../patterns/creational/builder.md) 讨论了创建多配置multiple configurations对象。
 
-[associated function]: https://doc.rust-lang.org/stable/book/ch05-03-method-syntax.html#associated-functions
+[关联函数associated function]: https://doc.rust-lang.org/stable/book/ch05-03-method-syntax.html#associated-functions
 [std-default]: https://doc.rust-lang.org/stable/std/default/trait.Default.html
 [std-or-default]: https://doc.rust-lang.org/stable/std/?search=or_default
